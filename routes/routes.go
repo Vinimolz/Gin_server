@@ -8,6 +8,9 @@ import (
 func HandleRequests() {
 	r := gin.Default()
 	r.GET("/students", controllers.GetAllStudents)
+	r.GET("/students/:student_id", controllers.GetStudentById)
+	r.DELETE("/students/:student_id", controllers.DeleteStudentById)
+	r.PATCH("/students/:student_id", controllers.EditStudent)
 	r.GET("/:name", controllers.HelloThere)
 	r.POST("/students", controllers.CreateNewStudentAgain)
 	r.Run()

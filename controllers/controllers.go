@@ -10,7 +10,45 @@ import (
 )
 
 func GetAllStudents(c *gin.Context) {
-	c.JSON(200, student.Students)
+	var studentSlice []student.Student
+	db.Db.Find(&studentSlice)
+	c.JSON(200, studentSlice)
+}
+
+func GetStudentById(c *gin.Context) {
+	studentId := c.Params.ByName("student_id")
+	var desiredStudent student.Student
+	db.Db.First(&desiredStudent, studentId)
+
+	if desiredStudent.ID == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"404:": "Student was not found"})
+		return
+	}
+
+	c.JSON(200, desiredStudent)
+}
+
+func DeleteStudentById(c *gin.Context) {
+	studentId := c.Params.ByName("student_id")
+	var deleteThisStudent student.Student
+	db.Db.Where("ID = ?", studentId).Delete(&deleteThisStudent)
+	c.JSON(http.StatusOK, gin.H{"Success:" : "Student was deleted from db"})
+}
+
+func EditStudent(c *gin.Context) {
+	var editStudent student.Student
+	studentId := c.Params.ByName("student_id")
+
+	db.Db.First(&editStudent, studentId)
+
+	if err := c.ShouldBindJSON(&editStudent); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error: " : "Could not edit the student"})
+		return
+	}
+
+	db.Db.Model(&editStudent).UpdateColumns(editStudent)
+
+	c.JSON(http.StatusOK, editStudent)
 }
 
 func HelloThere(c *gin.Context) {
