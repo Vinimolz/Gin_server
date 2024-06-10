@@ -9,5 +9,6 @@ func HandleRequests() {
 	r := gin.Default()
 	r.GET("/students", controllers.GetAllStudents)
 	r.GET("/:name", controllers.HelloThere)
+	r.POST("/students", controllers.CreateNewStudentAgain)
 	r.Run()
 }
