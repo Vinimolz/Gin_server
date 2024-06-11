@@ -5,19 +5,19 @@ import (
 	"net/http"
 
 	db "github.com/Vinimolz/Gin_server/database"
-	student "github.com/Vinimolz/Gin_server/models"
+	"github.com/Vinimolz/Gin_server/models"
 	"github.com/gin-gonic/gin"
 )
 
 func GetAllStudents(c *gin.Context) {
-	var studentSlice []student.Student
+	var studentSlice []models.Student
 	db.Db.Find(&studentSlice)
 	c.JSON(200, studentSlice)
 }
 
 func GetStudentById(c *gin.Context) {
 	studentId := c.Params.ByName("student_id")
-	var desiredStudent student.Student
+	var desiredStudent models.Student
 	db.Db.First(&desiredStudent, studentId)
 
 	if desiredStudent.ID == 0 {
@@ -30,19 +30,24 @@ func GetStudentById(c *gin.Context) {
 
 func DeleteStudentById(c *gin.Context) {
 	studentId := c.Params.ByName("student_id")
-	var deleteThisStudent student.Student
+	var deleteThisStudent models.Student
 	db.Db.Where("ID = ?", studentId).Delete(&deleteThisStudent)
-	c.JSON(http.StatusOK, gin.H{"Success:" : "Student was deleted from db"})
+	c.JSON(http.StatusOK, gin.H{"Success:": "Student was deleted from db"})
 }
 
 func EditStudent(c *gin.Context) {
-	var editStudent student.Student
+	var editStudent models.Student
 	studentId := c.Params.ByName("student_id")
 
 	db.Db.First(&editStudent, studentId)
 
 	if err := c.ShouldBindJSON(&editStudent); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"Error: " : "Could not edit the student"})
+		c.JSON(http.StatusBadRequest, gin.H{"Error: ": "Could not edit the student"})
+		return
+	}
+
+	if err := models.FieldValidator(&editStudent); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
 		return
 	}
 
@@ -51,13 +56,8 @@ func EditStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, editStudent)
 }
 
-func HelloThere(c *gin.Context) {
-	name := c.Params.ByName("name")
-	c.JSON(200, gin.H{"Hello, there!": "Your name is: " + name})
-}
-
 func CreateNewStudent(c *gin.Context) {
-	var newStudent student.Student
+	var newStudent models.Student
 	if err := c.ShouldBindJSON(&newStudent); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -79,13 +79,23 @@ func CreateNewStudent(c *gin.Context) {
 }
 
 func CreateNewStudentAgain(c *gin.Context) {
-	var student student.Student
+	var student models.Student
 
 	if err := c.ShouldBindJSON(&student); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
 		return
 	}
 
+	if err := models.FieldValidator(&student); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error:": err.Error()})
+		return
+	}
+
 	db.Db.Create(&student)
 	c.JSON(http.StatusOK, student)
+}
+
+func HelloThere(c *gin.Context) {
+	name := c.Params.ByName("name")
+	c.JSON(200, gin.H{"Hello, there!": "Your name is: " + name})
 }
